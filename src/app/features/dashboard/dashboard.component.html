@@ -1,0 +1,364 @@
+<!-- Injecting Inter font for professional academic typography -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+  /* Toggle, adapted from Uiverse.io by Shoh2008 (recolored to match the dashboard) */
+  .status-toggle .check {
+    --size: 34px;
+    position: relative;
+    background: linear-gradient(90deg, #6ee7b7, #10b981);
+    line-height: 0;
+    perspective: 400px;
+    font-size: var(--size);
+  }
+
+  .status-toggle .check input[type="checkbox"],
+  .status-toggle .check label,
+  .status-toggle .check label::before,
+  .status-toggle .check label::after,
+  .status-toggle .check {
+    appearance: none;
+    display: inline-block;
+    border-radius: var(--size);
+    border: 0;
+    transition: .35s ease-in-out;
+    box-sizing: border-box;
+    cursor: pointer;
+  }
+
+  .status-toggle .check label {
+    width: calc(2.2 * var(--size));
+    height: var(--size);
+    background: #d6d3cc;
+    overflow: hidden;
+  }
+
+  .status-toggle .check input[type="checkbox"] {
+    position: absolute;
+    z-index: 1;
+    width: calc(.8 * var(--size));
+    height: calc(.8 * var(--size));
+    top: calc(.1 * var(--size));
+    left: calc(.1 * var(--size));
+    background: linear-gradient(45deg, #dedede, #ffffff);
+    box-shadow: 0 6px 7px rgba(0, 0, 0, 0.3);
+    outline: none;
+    margin: 0;
+  }
+
+  .status-toggle .check input[type="checkbox"]:focus-visible {
+    box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.45);
+  }
+
+  .status-toggle .check input[type="checkbox"]:checked {
+    left: calc(1.3 * var(--size));
+  }
+
+  .status-toggle .check input[type="checkbox"]:checked + label {
+    background: transparent;
+  }
+
+  .status-toggle .check label::before,
+  .status-toggle .check label::after {
+    content: "· ·";
+    position: absolute;
+    overflow: hidden;
+    left: calc(.15 * var(--size));
+    top: calc(.5 * var(--size));
+    height: var(--size);
+    letter-spacing: calc(-0.04 * var(--size));
+    color: #9b9b9b;
+    font-family: "Times New Roman", serif;
+    z-index: 2;
+    font-size: calc(.6 * var(--size));
+    border-radius: 0;
+    transform-origin: 0 0 calc(-0.5 * var(--size));
+    backface-visibility: hidden;
+  }
+
+  .status-toggle .check label::after {
+    content: "●";
+    top: calc(.65 * var(--size));
+    left: calc(.2 * var(--size));
+    height: calc(.1 * var(--size));
+    width: calc(.35 * var(--size));
+    font-size: calc(.2 * var(--size));
+    transform-origin: 0 0 calc(-0.4 * var(--size));
+  }
+
+  .status-toggle .check input[type="checkbox"]:checked + label::before,
+  .status-toggle .check input[type="checkbox"]:checked + label::after {
+    left: calc(1.55 * var(--size));
+    top: calc(.4 * var(--size));
+    line-height: calc(.1 * var(--size));
+    transform: rotateY(360deg);
+  }
+
+  .status-toggle .check input[type="checkbox"]:checked + label::after {
+    height: calc(.16 * var(--size));
+    top: calc(.55 * var(--size));
+    left: calc(1.6 * var(--size));
+    font-size: calc(.6 * var(--size));
+    line-height: 0;
+  }
+
+  /* Smaller size for the toggles inside the status tiles */
+  .status-toggle.sm .check { --size: 26px; }
+
+  /* Per-status colors (the gradient shows through when the toggle is on) */
+  .status-toggle.tone-emerald .check { background: linear-gradient(90deg, #6ee7b7, #10b981); }
+  .status-toggle.tone-sky .check     { background: linear-gradient(90deg, #7dd3fc, #0ea5e9); }
+  .status-toggle.tone-amber .check   { background: linear-gradient(90deg, #fcd34d, #f59e0b); }
+  .status-toggle.tone-rose .check    { background: linear-gradient(90deg, #fda4af, #f43f5e); }
+  .status-toggle.tone-slate .check   { background: linear-gradient(90deg, #cbd5e1, #64748b); }
+</style>
+
+<div class="min-h-screen bg-[#f5f4ef] px-6 py-8 md:px-10 md:py-12 lg:px-14 text-slate-900" style="font-family: 'Inter', sans-serif;">
+  <div class="w-full max-w-[1400px] mx-auto">
+
+    <!-- HEADER -->
+    <header class="flex justify-between items-start gap-4 mb-10 lg:mb-12">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800">
+          FacultyPoint &middot; Instructor Dashboard
+            <span class="hidden text-slate-400 font-medium sm:inline">&middot; {{ today | date:'EEEE, d MMMM' }}</span>
+        </p>
+        <h1 class="text-3xl md:text-4xl font-semibold tracking-tight text-slate-900 mt-3">
+          {{ greeting }}@if (profile(); as p) {, {{ p.full_name }}}
+        </h1>
+        <p class="text-base text-slate-500 mt-2">Update your status and keep your details current.</p>
+      </div>
+      <button (click)="logout()" class="shrink-0 text-sm font-medium text-slate-500 hover:text-slate-900 underline-offset-4 hover:underline transition-colors duration-150 mt-1">
+        Log out
+      </button>
+    </header>
+
+    <!-- LOADING STATE -->
+    @if (loading()) {
+      <div class="text-slate-500 text-sm font-medium">
+        Loading your profile...
+      </div>
+    }
+
+    <!-- ERROR STATE -->
+    @if (errorMessage()) {
+      <div class="bg-red-50 border-l-4 border-red-800 p-4 mb-8 rounded-r-md">
+        <p class="text-sm text-red-900 font-medium">{{ errorMessage() }}</p>
+      </div>
+    }
+
+    @if (profile(); as p) {
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+
+        <!-- PROFILE SECTION -->
+        <section class="lg:col-span-4 bg-white border border-slate-200 p-7 md:p-8 rounded-2xl">
+
+          <!-- VIEW MODE -->
+          @if (!isEditing()) {
+            <div class="flex flex-col items-start gap-6">
+          @if (p.program) {
+            <p class="text-xs font-semibold uppercase tracking-widest text-emerald-800 mt-3">{{ p.program }} Department</p>
+            } @else {
+            <p class="text-xs text-amber-700 mt-3">No program set. Students can't find you by program yet.</p>
+          }
+              <!-- Avatar with live status dot -->
+              <div class="relative">
+                @if (p.avatar_url) {
+                  <img [src]="p.avatar_url" alt="Profile photo of {{ p.full_name }}" class="w-28 h-28 object-cover rounded-full border border-slate-200">
+                } @else {
+                  <div class="w-28 h-28 bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-800 font-semibold text-4xl rounded-full">
+                    {{ p.full_name.charAt(0) }}
+                  </div>
+                }
+                <span class="absolute bottom-1 right-1 h-6 w-6 rounded-full border-4 border-white" [ngClass]="statusDot[p.current_status]"></span>
+              </div>
+
+              <!-- Details -->
+              <div>
+                <h2 class="text-2xl font-semibold text-slate-900 tracking-tight">{{ p.full_name }}</h2>
+                <p class="text-slate-500 text-xs font-semibold mt-1 uppercase tracking-widest">{{ p.role }}</p>
+
+                <span class="inline-flex items-center gap-2 mt-4 px-3 py-1.5 rounded-full bg-[#f5f4ef] text-sm font-medium text-slate-800">
+                  <span class="h-2 w-2 rounded-full" [ngClass]="statusDot[p.current_status]"></span>
+                  {{ p.current_status }}
+                </span>
+              </div>
+
+              @if (p.contact_info) {
+                <div class="w-full pt-6 border-t border-slate-100">
+                  <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-1.5">Contact</p>
+                  <p class="text-sm text-slate-700 break-words leading-relaxed">{{ p.contact_info }}</p>
+                </div>
+              }
+
+              <button (click)="startEdit()" class="w-full px-4 py-2.5 border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 hover:border-slate-400 transition-colors duration-150 rounded-lg">
+                Edit profile
+              </button>
+            </div>
+          }
+
+          <!-- EDIT MODE -->
+          @if (isEditing()) {
+            <div>
+              <h3 class="text-lg font-semibold text-slate-900 mb-6 border-b border-slate-100 pb-4">Edit profile information</h3>
+
+              <div class="grid grid-cols-1 gap-5">
+                <div>
+                  <label class="block text-sm font-medium text-slate-800 mb-2">Full name</label>
+                  <input type="text" [(ngModel)]="editFormData.full_name" class="w-full p-2.5 bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:border-emerald-800 focus:ring-0 outline-none transition-colors rounded-lg">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-800 mb-2">Profile photo</label>
+                  <input type="file" accept="image/*" (change)="onFileSelected($event)"
+                    class="w-full text-sm text-slate-600 border border-slate-300 bg-slate-50 cursor-pointer rounded-lg overflow-hidden file:cursor-pointer file:mr-4 file:py-2.5 file:px-4 file:border-0 file:border-r file:border-slate-300 file:bg-slate-200 file:text-slate-800 file:font-medium hover:file:bg-slate-300 transition-colors">
+
+                  @if (uploadingImage()) {
+                    <p class="text-xs text-slate-600 mt-2 font-medium">Uploading photo...</p>
+                  }
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-800 mb-2">Contact details</label>
+                  <input type="text" [(ngModel)]="editFormData.contact_info" placeholder="Phone, email, or office location" class="w-full p-2.5 bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:border-emerald-800 focus:ring-0 outline-none transition-colors rounded-lg">
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-slate-800 mb-2">Program</label>
+                  <select [(ngModel)]="editFormData.program" class="w-full p-2.5 bg-slate-50 border border-slate-300 text-slate-900 text-sm focus:border-emerald-800 focus:ring-0 outline-none transition-colors rounded-lg">
+                    <option value="">Select a program</option>
+                    @for (program of programs; track program.value) {
+                      <option [value]="program.value">{{ program.label }}</option>
+                    }
+                  </select>
+                </div>
+              </div>
+
+              <div class="flex gap-3 mt-8">
+                <button (click)="saveProfile()" [disabled]="uploadingImage()" class="flex-1 px-6 py-2.5 bg-emerald-800 text-white text-sm font-medium hover:bg-emerald-900 transition-colors duration-150 disabled:opacity-50 rounded-lg">
+                  Save changes
+                </button>
+                <button (click)="cancelEdit()" class="flex-1 px-6 py-2.5 border border-slate-300 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors duration-150 rounded-lg">
+                  Cancel
+                </button>
+              </div>
+            </div>
+          }
+        </section>
+
+        <!-- STATUS SECTION -->
+        <section class="lg:col-span-8 bg-white border border-slate-200 border-t-4 border-t-emerald-800 p-7 md:p-9 rounded-2xl">
+
+          <!-- Title + quick toggle -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+            <div>
+              <h3 class="text-xl font-semibold text-slate-900 tracking-tight">Set your status</h3>
+              <p class="text-sm text-slate-500 mt-1">Students see the change in the directory right away.</p>
+            </div>
+
+            <div class="status-toggle flex items-center gap-3 shrink-0">
+              <span class="text-sm font-medium text-slate-600 w-20 text-right">
+                {{ p.current_status === 'Offline' ? 'Offline' : 'Available' }}
+              </span>
+              <div class="check">
+                <input
+                  type="checkbox"
+                  id="availability-toggle"
+                  aria-label="Available for students"
+                  [checked]="p.current_status !== 'Offline'"
+                  (change)="updateStatus($any($event.target).checked ? 'In Office' : 'Offline')">
+                <label for="availability-toggle"></label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status tiles, each with its own colored toggle -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 mt-8">
+            @for (status of statuses; track status; let i = $index) {
+              <div
+                [ngClass]="{
+                  'bg-emerald-900 text-white border-emerald-900': p.current_status === status,
+                  'bg-white text-slate-800 border-slate-200 hover:border-emerald-700/40 hover:bg-emerald-50/40': p.current_status !== status
+                }"
+                class="flex flex-col items-start text-left p-4 border rounded-xl transition-all duration-150 hover:-translate-y-0.5">
+
+                <span class="flex w-full items-center justify-between">
+                  <span class="h-2.5 w-2.5 rounded-full" [ngClass]="statusDot[status]"></span>
+
+                  <!-- Colored toggle -->
+                  <span class="status-toggle sm" [ngClass]="statusTone[status]">
+                    <span class="check">
+                      <input
+                        type="checkbox"
+                        [id]="'status-toggle-' + i"
+                        [attr.aria-label]="'Set status to ' + status"
+                        [checked]="p.current_status === status"
+                        (change)="$any($event.target).checked = true; updateStatus(status)">
+                      <label [attr.for]="'status-toggle-' + i"></label>
+                    </span>
+                  </span>
+                </span>
+
+                <label [attr.for]="'status-toggle-' + i" class="mt-4 w-full cursor-pointer">
+                  <span class="block text-sm font-semibold">{{ status }}</span>
+                  <span class="block mt-0.5 text-xs leading-snug" [ngClass]="p.current_status === status ? 'text-emerald-100' : 'text-slate-500'">
+                    {{ statusHint[status] }}
+                  </span>
+                </label>
+              </div>
+            }
+          </div>
+
+          <!-- What students see -->
+          <div class="mt-10">
+            <p class="text-xs font-semibold uppercase tracking-widest text-slate-400 mb-3">What students see</p>
+
+            <div class="flex items-center justify-between gap-4 rounded-xl border border-dashed border-slate-300 bg-[#faf9f6] px-4 py-3.5">
+              <div class="flex items-center gap-3 min-w-0">
+                @if (p.avatar_url) {
+                  <img [src]="p.avatar_url" alt="" class="w-10 h-10 object-cover rounded-full border border-slate-200">
+                } @else {
+                  <div class="w-10 h-10 bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-800 font-semibold rounded-full">
+                    {{ p.full_name.charAt(0) }}
+                  </div>
+                }
+                <div class="min-w-0">
+                  <p class="text-sm font-semibold text-slate-900 truncate">{{ p.full_name }}</p>
+                  <p class="text-xs text-slate-500 truncate">{{ p.role }}</p>
+                </div>
+              </div>
+
+              <span class="inline-flex items-center gap-2 shrink-0 px-3 py-1.5 rounded-full bg-white border border-slate-200 text-sm font-medium text-slate-800">
+                <span class="h-2 w-2 rounded-full" [ngClass]="statusDot[p.current_status]"></span>
+                {{ p.current_status }}
+              </span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    }
+
+  </div>
+</div>
+
+<!-- LOGOUT MODAL -->
+@if (showLogoutModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 transition-opacity">
+    <div class="bg-white shadow-lg border border-slate-200 w-full max-w-sm mx-4 overflow-hidden rounded-2xl">
+      <div class="p-8 pb-6 text-center">
+        <h3 class="text-lg font-semibold text-slate-900 mb-2">Log out?</h3>
+        <p class="text-slate-600 text-sm">You'll need to sign in again to update your status.</p>
+      </div>
+
+      <div class="flex border-t border-slate-200">
+        <button (click)="cancelLogout()" class="flex-1 py-4 text-slate-600 text-sm font-medium hover:bg-slate-50 transition-colors border-r border-slate-200">
+          Stay signed in
+        </button>
+        <button (click)="confirmLogout()" class="flex-1 py-4 text-emerald-900 text-sm font-semibold hover:bg-emerald-50 transition-colors">
+          Log out
+        </button>
+      </div>
+    </div>
+  </div>
+}

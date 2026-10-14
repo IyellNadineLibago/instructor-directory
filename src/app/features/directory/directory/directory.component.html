@@ -1,0 +1,188 @@
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+</style>
+
+<div class="min-h-screen bg-[#f5f4ef] text-slate-900" style="font-family: 'Inter', sans-serif;">
+
+  <!-- HERO: campus photo + dark overlay, logo top-left -->
+  <header class="relative isolate overflow-hidden">
+    <img src="CampusImage.webp" alt="USTP Villanueva campus building"
+      class="absolute inset-0 -z-20 h-full w-full object-cover">
+    <div class="absolute inset-0 -z-10 bg-emerald-950/75"></div>
+
+    <!-- Top bar -->
+    <div class="mx-auto flex w-full max-w-[1400px] items-start justify-between px-6 pt-6 md:px-10 lg:px-14">
+      <div class="rounded-xl bg-white p-2 shadow-lg ring-1 ring-black/5">
+        <img src="USTP.png" alt="University of Science and Technology of Southern Philippines"
+          class="h-14 w-auto md:h-16">
+      </div>
+
+      @if (isSignedIn()) {
+        <a routerLink="/dashboard"
+          class="rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/30 transition-colors hover:bg-white/20">
+          Go to dashboard
+        </a>
+      } @else {
+        <a routerLink="/login"
+          class="rounded-lg bg-white/10 px-4 py-2 text-sm font-medium text-white ring-1 ring-white/30 transition-colors hover:bg-white/20">
+          Instructor login
+        </a>
+      }
+    </div>
+
+    <!-- Title + search -->
+    <div class="mx-auto w-full max-w-[1400px] px-6 pb-14 pt-14 md:px-10 md:pb-20 md:pt-20 lg:px-14">
+      <p class="text-xs font-semibold uppercase tracking-widest text-emerald-300">
+        FacultyPoint &middot; USTP Villanueva
+      </p>
+      <h1 class="mt-4 max-w-2xl text-4xl font-semibold tracking-tight text-white md:text-5xl">
+        Find your instructor before you walk over.
+      </h1>
+      <p class="mt-4 max-w-xl text-base text-slate-200">
+        Search by name or browse by program to see who is in the office, in class, or away.
+      </p>
+
+      <div class="mt-8 max-w-xl">
+        <label for="search" class="sr-only">Search instructors by name</label>
+        <input id="search" type="text"
+          [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)"
+          placeholder="Search instructors by name"
+          class="w-full rounded-xl bg-white px-4 py-3.5 text-sm text-slate-900 shadow-lg outline-none placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-400">
+      </div>
+    </div>
+  </header>
+
+  <!-- DIRECTORY -->
+  <main class="mx-auto w-full max-w-[1400px] px-6 py-10 md:px-10 lg:px-14">
+
+    <!-- Program filter -->
+    <div class="flex flex-wrap items-center gap-2" role="group" aria-label="Filter by program">
+      @for (prog of programs; track prog.value) {
+        <button type="button" (click)="selectedProgram.set(prog.value)"
+          [ngClass]="selectedProgram() === prog.value
+            ? 'bg-emerald-900 text-white border-emerald-900'
+            : 'bg-white text-slate-700 border-slate-200 hover:border-emerald-700/40'"
+          class="rounded-full border px-4 py-2 text-sm font-medium transition-colors duration-150">
+          {{ prog.label }}
+          <span class="ml-1 opacity-70">{{ counts()[prog.value] }}</span>
+        </button>
+      }
+    </div>
+
+    @if (loading()) {
+      <p class="mt-8 text-sm font-medium text-slate-500">Loading directory...</p>
+    }
+
+    @if (errorMessage()) {
+      <div class="mt-8 rounded-r-md border-l-4 border-red-800 bg-red-50 p-4">
+        <p class="text-sm font-medium text-red-900">{{ errorMessage() }}</p>
+      </div>
+    }
+
+    @if (!loading() && !errorMessage()) {
+      <p class="mt-6 text-sm text-slate-500">
+        Showing {{ filtered().length }} of {{ instructors().length }} instructors
+      </p>
+
+      @if (filtered().length === 0) {
+        <div class="mt-6 rounded-2xl border border-dashed border-slate-300 bg-white p-10 text-center">
+          <p class="text-base font-semibold text-slate-900">No instructors found</p>
+          <p class="mt-1 text-sm text-slate-500">Try a different name or program.</p>
+          <button type="button" (click)="clearFilters()"
+            class="mt-5 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50">
+            Clear filters
+          </button>
+        </div>
+      } @else {
+        <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          @for (i of filtered(); track i.id) {
+            <button type="button" (click)="openProfile(i.id)"
+              class="flex flex-col items-start rounded-2xl border border-slate-200 bg-white p-5 text-left transition-all duration-150 hover:-translate-y-0.5 hover:border-emerald-700/40 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-emerald-700">
+
+              <div class="relative">
+                @if (i.avatar_url) {
+                  <img [src]="i.avatar_url" [alt]="'Photo of ' + i.full_name"
+                    class="h-20 w-20 rounded-full border border-slate-200 object-cover">
+                } @else {
+                  <div class="flex h-20 w-20 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 text-3xl font-semibold text-emerald-800">
+                    {{ i.full_name.charAt(0) }}
+                  </div>
+                }
+                <span class="absolute bottom-0.5 right-0.5 h-5 w-5 rounded-full border-4 border-white"
+                  [ngClass]="statusDot[i.current_status] ?? 'bg-slate-400'"></span>
+              </div>
+
+              <h2 class="mt-4 text-base font-semibold tracking-tight text-slate-900">{{ i.full_name }}</h2>
+              <p class="mt-0.5 text-xs font-semibold uppercase tracking-widest text-emerald-800">
+                {{ i.program ?? 'Program not set' }}
+              </p>
+
+              <span class="mt-4 inline-flex items-center gap-2 rounded-full bg-[#f5f4ef] px-3 py-1.5 text-sm font-medium text-slate-800">
+                <span class="h-2 w-2 rounded-full" [ngClass]="statusDot[i.current_status] ?? 'bg-slate-400'"></span>
+                {{ i.current_status }}
+              </span>
+            </button>
+          }
+        </div>
+      }
+    }
+  </main>
+
+  <footer class="mx-auto w-full max-w-[1400px] px-6 pb-10 text-xs text-slate-400 md:px-10 lg:px-14">
+    FacultyPoint &middot; USTP Villanueva
+  </footer>
+</div>
+
+<!-- PROFILE POP-UP -->
+@if (selected(); as s) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 p-4" (click)="closeProfile()">
+    <div class="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-lg"
+      role="dialog" aria-modal="true" [attr.aria-label]="s.full_name + ' profile'"
+      (click)="$event.stopPropagation()">
+
+      <div class="p-8">
+        <div class="relative w-fit">
+          @if (s.avatar_url) {
+            <img [src]="s.avatar_url" [alt]="'Photo of ' + s.full_name"
+              class="h-28 w-28 rounded-full border border-slate-200 object-cover">
+          } @else {
+            <div class="flex h-28 w-28 items-center justify-center rounded-full border border-emerald-100 bg-emerald-50 text-4xl font-semibold text-emerald-800">
+              {{ s.full_name.charAt(0) }}
+            </div>
+          }
+          <span class="absolute bottom-1 right-1 h-6 w-6 rounded-full border-4 border-white"
+            [ngClass]="statusDot[s.current_status] ?? 'bg-slate-400'"></span>
+        </div>
+
+        <h2 class="mt-5 text-2xl font-semibold tracking-tight text-slate-900">{{ s.full_name }}</h2>
+        <p class="mt-1 text-sm text-slate-500">
+          {{ s.program ? programNames[s.program] + ' (' + s.program + ')' : 'Program not set' }}
+        </p>
+
+        <div class="mt-5 flex items-center gap-3 rounded-xl bg-[#f5f4ef] px-4 py-3">
+          <span class="h-3 w-3 shrink-0 rounded-full" [ngClass]="statusDot[s.current_status] ?? 'bg-slate-400'"></span>
+          <div>
+            <p class="text-sm font-semibold text-slate-900">{{ s.current_status }}</p>
+            <p class="text-xs text-slate-500">{{ statusHint[s.current_status] }}</p>
+          </div>
+        </div>
+
+        <div class="mt-6 border-t border-slate-100 pt-5">
+          <p class="mb-1.5 text-xs font-semibold uppercase tracking-widest text-slate-400">Contact</p>
+          @if (s.contact_info) {
+            <p class="break-words text-sm leading-relaxed text-slate-700">{{ s.contact_info }}</p>
+          } @else {
+            <p class="text-sm text-slate-400">No contact details provided.</p>
+          }
+        </div>
+      </div>
+
+      <div class="border-t border-slate-200">
+        <button type="button" (click)="closeProfile()"
+          class="w-full py-4 text-sm font-medium text-slate-600 transition-colors hover:bg-slate-50">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+}
